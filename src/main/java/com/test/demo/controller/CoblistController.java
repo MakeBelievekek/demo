@@ -23,7 +23,7 @@ public class CoblistController {
 
     @PostMapping
 
-    public ResponseEntity<CodeDto> getOrcFormData(@RequestBody FilePathDto filePath) {
+    public ResponseEntity<CodeDto> getCoblistCode(@RequestBody FilePathDto filePath) {
         log.info("coblist request " + filePath.toString());
         CodeDto result = this.fileHandlerService.getCoblist(filePath);
         return ResponseEntity.status(HttpStatus.OK).body(result);
