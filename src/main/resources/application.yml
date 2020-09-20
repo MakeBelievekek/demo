@@ -1,0 +1,17 @@
+server:
+  port: 8080
+  servlet:
+    encoding:
+      enabled: true
+      charset: UTF-8
+      force: true
+
+
+logging:
+  level:
+    com.test.demo: debug
+    org.springframework.web: info
+    org.hibernate: error
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
