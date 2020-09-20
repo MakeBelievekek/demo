@@ -5,7 +5,6 @@ import com.test.demo.dto.FilePathDto;
 import com.test.demo.services.FileHandlerService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MarkerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,16 +15,22 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @AllArgsConstructor
 @RestController
-@RequestMapping("api/coblist")
+@RequestMapping("api/file")
 public class CoblistController {
 
     private final FileHandlerService fileHandlerService;
 
-    @PostMapping
-
+    @PostMapping("/coblist")
     public ResponseEntity<CodeDto> getCoblistCode(@RequestBody FilePathDto filePath) {
         log.info("coblist request " + filePath.toString());
         CodeDto result = this.fileHandlerService.getCoblist(filePath);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @PostMapping("/trace")
+    public ResponseEntity<CodeDto> getTrace(@RequestBody FilePathDto filePath) {
+        log.info("trace request " + filePath.toString());
+        CodeDto result = this.fileHandlerService.getTrace(filePath);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 /*

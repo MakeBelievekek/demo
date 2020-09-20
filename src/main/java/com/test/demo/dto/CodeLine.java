@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 public class CodeLine {
     String lineNumber;
     String code;
-    String statement;
-    String order;
+    Integer statement;
+    Integer order;
 }
