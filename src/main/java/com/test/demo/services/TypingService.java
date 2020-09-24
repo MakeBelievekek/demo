@@ -1,14 +1,18 @@
 package com.test.demo.services;
 
+import com.test.demo.dto.BkpModelDto;
+import com.test.demo.dto.DebuggerModelDto;
 import com.test.demo.dto.MultiplePgmModelDto;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -16,33 +20,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 @AllArgsConstructor
 public class TypingService {
-    private List<String> commands;
 
     public void typeDebugStart(MultiplePgmModelDto multiPgm) {
         System.setProperty("java.awt.headless", "false");
-        commands = this.generateCommands(multiPgm, commands);
-        log.warn("ez a command Array: " + commands);
+        log.warn("ez a command Array: " + this.generateCommands(multiPgm).toString());
         try {
             Robot robot = new Robot();
             robot.delay(5000);
 
-            commands.forEach(com -> this.typeRacer(robot, com));
-            /*
-            byte[] bytes = multiPgm.getDebuggerModelList().get(0).getProgram().getBytes();
-            robot.delay(5000);
-            pressKey(robot, KeyEvent.VK_CAPS_LOCK);
-            for (byte b : bytes) {
-                int code = b;
-                // keycode only handles [A-Z] (which is ASCII decimal [65-90])
-                if (code > 96 && code < 123) code = code - 32;
-                robot.delay(40);
-                pressKey(robot, code);
-            }STRDBG
-            pressKey(robot, KeyEvent.VK_CAPS_LOCK);*/
+            this.generateCommands(multiPgm).forEach(com -> this.typeRacer(robot, com));
+
         } catch (AWTException e) {
 
         }
-        commands = Collections.emptyList();
     }
 
     private void pressKey(Robot robik, int commandKey) {
@@ -50,79 +40,23 @@ public class TypingService {
         robik.keyRelease(commandKey);
     }
 
-    private List<String> generateCommands(MultiplePgmModelDto multiPgm, List<String> commandList) {
-        List<String> tempCommandList = new ArrayList<>(commandList);
+    private List<String> generateCommands(MultiplePgmModelDto multiPgm) {
+        List<String> tempCommandList = new ArrayList<>();
         AtomicInteger counter = new AtomicInteger();
+
         multiPgm.getDebuggerModelList().forEach(debuggerModelDto -> {
-            StringBuilder bkp = new StringBuilder();
-            StringBuilder dspPgmVar = new StringBuilder();
-            dspPgmVar.append("PGMVAR(");
 
             if (debuggerModelDto.getProgram() != null && debuggerModelDto.getProgram().length() > 0) {
                 String tempProgram = debuggerModelDto.getProgram();
                 boolean firstPgm = counter.get() == 0;
                 tempCommandList.add(this.startOnlineDbgCommand(tempProgram, multiPgm.getBatch(), firstPgm));
 
-
                 debuggerModelDto.getBkpList().forEach(bkpModelDto -> {
-                    Boolean additionalVariableExists = false;
 
+                    StringBuilder bkpCommand = new StringBuilder(processVariables(bkpModelDto, tempProgram));
 
-                    bkp.append(dbgStatement(bkpModelDto.getStatement(), tempProgram));
+                    tempCommandList.add(bkpCommand.toString());
 
-                    if (bkpModelDto.getPgmvar1() != null && bkpModelDto.getPgmvar1().length() > 0) {
-                        dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar1()));
-                        additionalVariableExists = true;
-                    }
-                    if (bkpModelDto.getPgmvar2() != null && bkpModelDto.getPgmvar2().length() > 0) {
-                        dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar2()));
-                        additionalVariableExists = true;
-                    }
-                    if (bkpModelDto.getPgmvar3() != null && bkpModelDto.getPgmvar3().length() > 0) {
-                        dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar3()));
-                        additionalVariableExists = true;
-                    }
-                    if (bkpModelDto.getPgmvar4() != null && bkpModelDto.getPgmvar4().length() > 0) {
-                        dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar4()));
-                        additionalVariableExists = true;
-                    }
-                    if (bkpModelDto.getPgmvar5() != null && bkpModelDto.getPgmvar5().length() > 0) {
-                        dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar5()));
-                        additionalVariableExists = true;
-                    }
-                    if (bkpModelDto.getPgmvar6() != null && bkpModelDto.getPgmvar6().length() > 0) {
-                        dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar6()));
-                        additionalVariableExists = true;
-                    }
-                    if (bkpModelDto.getPgmvar7() != null && bkpModelDto.getPgmvar7().length() > 0) {
-                        dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar7()));
-                        additionalVariableExists = true;
-                    }
-                    if (bkpModelDto.getPgmvar8() != null && bkpModelDto.getPgmvar8().length() > 0) {
-                        dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar8()));
-                        additionalVariableExists = true;
-                    }
-                    if (bkpModelDto.getPgmvar9() != null && bkpModelDto.getPgmvar9().length() > 0) {
-                        dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar9()));
-                        additionalVariableExists = true;
-                    }
-                    if (bkpModelDto.getPgmvar10() != null && bkpModelDto.getPgmvar10().length() > 0) {
-                        dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar10()));
-                        additionalVariableExists = true;
-                    }
-                    if (additionalVariableExists) {
-                        dspPgmVar.append(")");
-                        bkp.append(dspPgmVar.toString());
-                    }
-
-                    additionalVariableExists = false;
-                    bkp.append(" PGM(" + tempProgram + ")");
-
-                    tempCommandList.add(bkp.toString());
-
-                    bkp.setLength(0);
-                    dspPgmVar.setLength(7);
-                    log.info("ez a számláló te dummy: " + counter);
                     counter.getAndIncrement();
                 });
             }
@@ -130,33 +64,141 @@ public class TypingService {
         return tempCommandList;
     }
 
+    private String processVariables(BkpModelDto bkpModelDto, String program) {
+        Boolean additionalVariableExists = false;
 
-    private String startOnlineDbgCommand(String PGM, Boolean batch, boolean firstPgm) {
+        StringBuilder bkp = new StringBuilder();
+        bkp.append(dbgStatement(bkpModelDto.getStatement()));
+
+        StringBuilder dspPgmVar = new StringBuilder();
+        dspPgmVar.append("PGMVAR(");
+
+        if (bkpModelDto.getPgmvar1() != null && bkpModelDto.getPgmvar1().length() > 0) {
+            dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar1()));
+            additionalVariableExists = true;
+        }
+        if (bkpModelDto.getPgmvar2() != null && bkpModelDto.getPgmvar2().length() > 0) {
+            dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar2()));
+            additionalVariableExists = true;
+        }
+        if (bkpModelDto.getPgmvar3() != null && bkpModelDto.getPgmvar3().length() > 0) {
+            dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar3()));
+            additionalVariableExists = true;
+        }
+        if (bkpModelDto.getPgmvar4() != null && bkpModelDto.getPgmvar4().length() > 0) {
+            dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar4()));
+            additionalVariableExists = true;
+        }
+        if (bkpModelDto.getPgmvar5() != null && bkpModelDto.getPgmvar5().length() > 0) {
+            dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar5()));
+            additionalVariableExists = true;
+        }
+        if (bkpModelDto.getPgmvar6() != null && bkpModelDto.getPgmvar6().length() > 0) {
+            dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar6()));
+            additionalVariableExists = true;
+        }
+        if (bkpModelDto.getPgmvar7() != null && bkpModelDto.getPgmvar7().length() > 0) {
+            dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar7()));
+            additionalVariableExists = true;
+        }
+        if (bkpModelDto.getPgmvar8() != null && bkpModelDto.getPgmvar8().length() > 0) {
+            dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar8()));
+            additionalVariableExists = true;
+        }
+        if (bkpModelDto.getPgmvar9() != null && bkpModelDto.getPgmvar9().length() > 0) {
+            dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar9()));
+            additionalVariableExists = true;
+        }
+        if (bkpModelDto.getPgmvar10() != null && bkpModelDto.getPgmvar10().length() > 0) {
+            dspPgmVar.append(dbgVariable(bkpModelDto.getPgmvar10()));
+            additionalVariableExists = true;
+        }
+        if (additionalVariableExists) {
+            dspPgmVar.append(")");
+            bkp.append(dspPgmVar.toString());
+        }
+
+        String conditionForBreakPoint = getConditionForBreakPoint(bkpModelDto, additionalVariableExists);
+
+        bkp.append(" PGM(" + program + ")");
+        if (conditionForBreakPoint != null) {
+            bkp.append(" " + conditionForBreakPoint);
+        }
+
+        return bkp.toString();
+    }
+
+    private String getConditionForBreakPoint(BkpModelDto bkpModelDto, Boolean additionalVariableExists) {
         String result = null;
+        if (bkpModelDto.getHasCondition() && additionalVariableExists) {
+            String varToCheckAgainst = bkpModelDto.getPgmvarForCondition();
+            String conditionValue = bkpModelDto.getConditionValue();
+            Boolean isConditionValueNumber = bkpModelDto.getIsConditionValueNumber();
+            String condition = bkpModelDto.getCondition();
 
-        if (firstPgm) {
-            result = "STRDBG(" + PGM + ")";
-            log.warn("STR");
-        } else {
-            result = "ADDPGM(" + PGM + ")";
-            log.warn("ADD");
+            StringBuilder sb = new StringBuilder("BKPCOND(");
 
+            if (isConditionValueNumber) {
+                sb.append(varToCheckAgainst + " " + condition + " " + conditionValue + ")");
+            } else {
+                sb.append(varToCheckAgainst + " " + condition + " " + "'" + conditionValue + "')");
+            }
+            result = sb.toString();
         }
         return result;
     }
 
-    private String dbgStatement(String statement, String PGM) {
-        return "ADDBKP(" + statement + ") ";
+    public void sendPgmBkp(DebuggerModelDto PGM) {
+        try {
+            Robot robot = new Robot();
+            robot.delay(5000);
+
+            processProgramForDebuggingLines(PGM).forEach(com -> this.typeRacer(robot, com));
+
+        } catch (AWTException e) {
+
+        }
+    }
+
+    public List<String> processProgramForDebuggingLines(DebuggerModelDto PGM) {
+        List<String> tempCommandList = new ArrayList<>();
+        String program = PGM.getProgram();
+        PGM.getBkpList().forEach(bkpModelDto ->
+                tempCommandList.add(processVariables(bkpModelDto, program))
+        );
+        return tempCommandList;
+    }
+
+
+    private String startOnlineDbgCommand(String PGM, Boolean batch, boolean firstPgm) {
+        String result;
+
+        if (firstPgm && !batch) {
+            result = "STRDBG PGM(" + PGM + ")";
+        } else {
+            result = "ADDPGM (" + PGM + ")";
+        }
+        return result;
+    }
+
+    private String dbgStatement(String statement) {
+        return "ADDBKP STMT(" + statement + ") ";
     }
 
     private String dbgVariable(String variable) {
-        return "(" + variable + " ()) ";
+        return "('" + variable + "' ()) ";
     }
 
     private void typeRacer(Robot robot, String command) {
+        String tempCommand = command.toUpperCase();
+        for (int i = 0; i < tempCommand.length(); i++) {
 
-        for (int i = 0; i < command.length(); i++) {
-            char charToType = command.charAt(i);
+            char charToType = tempCommand.charAt(i);
+
+            for (byte aByte : String.valueOf(charToType).getBytes()) {
+                log.warn("ezt keresed " + aByte);
+            }
+
             type(charToType, robot);
         }
         pressKey(robot, KeyEvent.VK_ENTER);
@@ -386,7 +428,7 @@ public class TypingService {
                 doType(KeyEvent.VK_AMPERSAND, robot);
                 break;
             case '*':
-                doType(KeyEvent.VK_ASTERISK, robot);
+                doType(KeyEvent.VK_MULTIPLY, robot);
                 break;
             case '(':
                 doType(KeyEvent.VK_SHIFT, KeyEvent.VK_8, robot);
@@ -431,7 +473,7 @@ public class TypingService {
                 doType(KeyEvent.VK_COLON, robot);
                 break;
             case '\'':
-                doType(KeyEvent.VK_QUOTE, robot);
+                doType(KeyEvent.VK_SHIFT, KeyEvent.VK_1, robot);
                 break;
             case '"':
                 doType(KeyEvent.VK_QUOTEDBL, robot);
@@ -475,3 +517,5 @@ public class TypingService {
     }
 
 }
+
+

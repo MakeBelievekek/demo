@@ -10,8 +10,4 @@ import lombok.NoArgsConstructor;
 public class FilePathDto {
     String filePath;
 
-    @Override
-    public String toString() {
-        return String.format("FilePathDto{filePath='%s'}", filePath);
-    }
 }

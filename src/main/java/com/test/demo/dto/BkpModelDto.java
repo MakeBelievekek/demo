@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Optional;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,5 +19,9 @@ public class BkpModelDto {
     String pgmvar8;
     String pgmvar9;
     String pgmvar10;
-
+    Boolean hasCondition;
+    String pgmvarForCondition;
+    String condition;
+    String conditionValue;
+    Boolean isConditionValueNumber;
 }

@@ -23,8 +23,8 @@ public class FileHandlerService {
         try (BufferedReader br = new BufferedReader(new FileReader(filePath.getFilePath()))) {
             String line = br.readLine();
             boolean startRecording = false;
-
-            while (line != null) {
+            boolean stop = false;
+            while (line != null && !stop) {
                 int length = line.length();
                 CodeLine codeLine = new CodeLine();
                 if (length == 131) {
@@ -47,7 +47,7 @@ public class FileHandlerService {
                         }
                     }
                     if (length > 14) {
-                        codeLine.setLineNumber(line.substring(9,15));
+                        codeLine.setLineNumber(line.substring(9, 15));
                     }
                     if (length > 89) {
                         codeLine.setCode(line.substring(15, 90));
@@ -57,6 +57,9 @@ public class FileHandlerService {
                     codeDto.getCodeLines().add(codeLine);
                 }
 
+                if (line.contains("* * * * *   E N D   O F   S O U R C E   * * * * *")) {
+                    stop = true;
+                }
                 line = br.readLine();
 
             }
